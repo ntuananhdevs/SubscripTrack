@@ -1,14 +1,51 @@
-1. SubscripTrack — Quản lý & Cảnh báo "Chảy máu tiền" từ các dịch vụ (Netflix, Spotify, iCloud...)
-Ai trong chúng ta cũng có vài ba dịch vụ đăng ký theo tháng/năm và rất dễ quên, dẫn đến việc bị tự động trừ tiền vô tội vạ.
+<p align="center">
+  <h1 align="center">SubscripTrack</h1>
+</p>
 
-Tính năng cốt lõi: Lưu thông tin dịch vụ (Tên, số tiền, chu kỳ, ngày bắt đầu, thanh toán bằng thẻ nào).
+<p align="center">
+  Quản lý & Cảnh báo "Chảy máu tiền" từ các dịch vụ (Netflix, Spotify, iCloud...)
+</p>
 
-Điểm "khó" (Ngang logic Rắn săn mồi):
+---
 
-Viết logic Python để tự động tính toán số ngày còn lại (Countdown) cho từng dịch vụ.
+## About SubscripTrack
 
-Tính toán "Tổng số tiền phải trả trong tháng này" dựa trên ngày hiện tại (ví dụ: tháng này có 3 dịch vụ sắp đến hạn thì tổng tiền là bao nhiêu).
+Ai trong chúng ta cũng có vài ba dịch vụ đăng ký theo tháng/năm và rất dễ quên, dẫn đến việc bị tự động trừ tiền vô tội vạ. SubscripTrack ra đời để giúp bạn kiểm soát chi tiêu, theo dõi các gói đăng ký và nhắc nhở trước khi bị trừ tiền.
 
-Xử lý quy đổi tiền tệ cơ bản nếu bạn dùng cả dịch vụ trả bằng USD và VND.
+## Core Features
 
-Cách Jinja thể hiện: Dùng vòng lặp render các thẻ (card) dịch vụ. Nếu dịch vụ còn dưới 3 ngày sẽ đổi sang màu đỏ kèm hiệu ứng nhấp nháy, sắp đến hạn màu vàng, còn xa màu xanh.
+- **Quản lý thông tin:** Lưu trữ chi tiết thông tin dịch vụ (Tên, số tiền, chu kỳ, ngày bắt đầu, thẻ thanh toán).
+- **Đếm ngược (Countdown):** Tự động tính toán số ngày còn lại cho từng dịch vụ.
+- **Thống kê chi phí:** Tính toán "Tổng số tiền phải trả trong tháng này" dựa trên ngày hiện tại.
+- **Quy đổi tiền tệ:** Xử lý quy đổi tiền tệ cơ bản (USD, VND).
+- **Giao diện cảnh báo:** Render danh sách bằng Jinja qua các thẻ dịch vụ:
+  - Dưới 3 ngày: Chuyển sang màu đỏ kèm hiệu ứng nhấp nháy cảnh báo.
+  - Sắp đến hạn: Màu vàng nhắc nhở.
+  - Còn xa: Màu xanh an toàn.
+
+## Getting Started
+
+Dự án được xây dựng bằng Python và Flask.
+
+1. Clone repository:
+```bash
+git clone https://github.com/ntuananhdevs/SubscripTrack.git
+cd SubscripTrack
+```
+
+2. Cài đặt thư viện:
+```bash
+pip install -r requirements.txt
+```
+
+3. Khởi chạy ứng dụng:
+```bash
+python app.py
+```
+Sau đó truy cập `http://127.0.0.1:5000` trên trình duyệt.
+
+## Technical Challenges
+
+- Thuật toán tính ngày và chu kỳ lặp lại cho các gói dịch vụ đa dạng.
+- Quản lý logic thời gian thực một cách chính xác.
+- Kết hợp giữa Python backend và Jinja2 frontend để thay đổi trạng thái UI mượt mà.
