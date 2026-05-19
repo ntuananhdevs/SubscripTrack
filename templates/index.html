@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col gap-8">
+    
+    <!-- Summary Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow">
+        <div class="flex flex-col space-y-1.5 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-semibold leading-none tracking-tight">Tổng thanh toán tháng này</h3>
+                    <p class="text-sm text-muted-foreground mt-1.5">Dựa trên các dịch vụ đến hạn trong tháng hiện tại</p>
+                    <div class="mt-4 flex items-baseline gap-1.5 text-4xl font-bold">
+                        <span>{{ "{:,.0f}".format(total_this_month).replace(',', '.') }}</span>
+                        <span class="text-2xl text-muted-foreground">VND</span>
+                    </div>
+                </div>
+                <button onclick="toggleAddModal()" class="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5 h-10 px-5 py-2 w-full sm:w-auto">
+                    <i class="fa-solid fa-plus mr-2"></i> Thêm dịch vụ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services Section -->
+    <div>
+        <h2 class="text-2xl font-semibold tracking-tight mb-4">Các dịch vụ đang đăng ký ({{ subs|length }})</h2>
+        
+        {% if subs %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for sub in subs %}
+                {% set border_class = 'border-border' %}
+                {% set badge_class = 'bg-secondary text-secondary-foreground hover:bg-secondary/80' %}
+                
+                {% if sub.days_remaining <= 3 %}
+                    {% set border_class = 'border-destructive animate-blink' %}
+                    {% set badge_class = 'bg-destructive text-destructive-foreground hover:bg-destructive/90' %}
+                {% elif sub.days_remaining <= 7 %}
+                    {% set border_class = 'border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]' %}
+                    {% set badge_class = 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30' %}
+                {% else %}
+                    {% set border_class = 'border-emerald-500/50' %}
+                    {% set badge_class = 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' %}
+                {% endif %}
+
+                <div class="rounded-2xl border {{ border_class }} bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative group flex flex-col">
+                    <div class="p-6 flex-1">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-semibold leading-none tracking-tight text-lg">{{ sub.name }}</h3>
+                                <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground mt-2">
+                                    {{ 'Hàng tháng' if sub.cycle == 'monthly' else 'Hàng năm' }}
+                                </div>
+                            </div>
+                            <form action="{{ url_for('delete_sub', sub_id=sub.id) }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa dịch vụ này?');">
+                                <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 text-muted-foreground hover:text-destructive">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-3xl font-bold">{{ "{:,.0f}".format(sub.amount).replace(',', '.') if sub.currency == 'VND' else "{:,.2f}".format(sub.amount) }}</span>
+                                <span class="text-sm font-medium text-muted-foreground">{{ sub.currency }}</span>
+                            </div>
+                            <div class="flex items-center text-sm text-muted-foreground">
+                                <i class="fa-regular fa-credit-card mr-2 w-4"></i>
+                                <span>{{ sub.card_name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-6 pt-0 mt-auto border-t border-border/50 bg-muted/20">
+                        <div class="flex flex-col mt-4">
+                            <span class="text-xs text-muted-foreground font-medium uppercase tracking-wider">Kỳ tới</span>
+                            <span class="text-sm font-medium">{{ sub.next_date.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent {{ badge_class }}">
+                                {% if sub.days_remaining == 0 %}
+                                    <i class="fa-solid fa-circle-exclamation mr-1.5"></i> Hôm nay
+                                {% elif sub.days_remaining < 0 %}
+                                    Quá hạn {{ sub.days_remaining | abs }} ngày
+                                {% else %}
+                                    <i class="fa-regular fa-clock mr-1.5"></i> Còn {{ sub.days_remaining }} ngày
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground mt-8">
+            <div class="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                    <i class="fa-solid fa-box-open text-3xl"></i>
+                </div>
+                <h3 class="mt-4 text-lg font-semibold text-foreground">Không có dịch vụ nào</h3>
+                <p class="mb-4 mt-2 text-sm text-muted-foreground">Bạn chưa theo dõi bất kỳ dịch vụ đăng ký nào. Hãy thêm dịch vụ đầu tiên của bạn.</p>
+                <button onclick="toggleAddModal()" class="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-md h-10 px-5 py-2">
+                    Thêm dịch vụ
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Shadcn Dialog / Modal -->
+<div id="addModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center" onclick="if(event.target === this) toggleAddModal()">
+    <div class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
+        <div class="flex flex-col space-y-1.5 text-center sm:text-left">
+            <h2 class="text-lg font-semibold leading-none tracking-tight">Thêm dịch vụ mới</h2>
+            <p class="text-sm text-muted-foreground">Nhập thông tin dịch vụ bạn muốn theo dõi.</p>
+        </div>
+        <button onclick="toggleAddModal()" class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <i class="fa-solid fa-xmark h-4 w-4"></i>
+            <span class="sr-only">Đóng</span>
+        </button>
+        
+        <form action="{{ url_for('add_sub') }}" method="POST" class="grid gap-4 py-4">
+            <div class="grid gap-2">
+                <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Tên dịch vụ</label>
+                <input type="text" id="name" name="name" required placeholder="Netflix, Spotify..." class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="grid gap-2">
+                    <label for="amount" class="text-sm font-medium leading-none">Số tiền</label>
+                    <input type="number" id="amount" name="amount" step="0.01" required placeholder="0.00" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                </div>
+                <div class="grid gap-2">
+                    <label for="currency" class="text-sm font-medium leading-none">Tiền tệ</label>
+                    <select id="currency" name="currency" class="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                        <option value="VND" class="bg-background text-foreground">VND</option>
+                        <option value="USD" class="bg-background text-foreground">USD</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="grid gap-2">
+                    <label for="cycle" class="text-sm font-medium leading-none">Chu kỳ</label>
+                    <select id="cycle" name="cycle" class="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring">
+                        <option value="monthly" class="bg-background text-foreground">Hàng tháng</option>
+                        <option value="yearly" class="bg-background text-foreground">Hàng năm</option>
+                    </select>
+                </div>
+                <div class="grid gap-2">
+                    <label for="start_date" class="text-sm font-medium leading-none">Ngày bắt đầu</label>
+                    <input type="date" id="start_date" name="start_date" required class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [color-scheme:dark]">
+                </div>
+            </div>
+            
+            <div class="grid gap-2">
+                <label for="card_name" class="text-sm font-medium leading-none">Thẻ/Ví thanh toán</label>
+                <input type="text" id="card_name" name="card_name" required placeholder="Ví dụ: Visa Techcombank..." class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+            </div>
+            
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+                <button type="button" onclick="toggleAddModal()" class="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-5 py-2 mt-2 sm:mt-0">Hủy</button>
+                <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-5 py-2">Lưu dịch vụ</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
