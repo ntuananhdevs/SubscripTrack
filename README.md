@@ -49,3 +49,39 @@ Sau đó truy cập `http://127.0.0.1:5000` trên trình duyệt.
 - Thuật toán tính ngày và chu kỳ lặp lại cho các gói dịch vụ đa dạng.
 - Quản lý logic thời gian thực một cách chính xác.
 - Kết hợp giữa Python backend và Jinja2 frontend để thay đổi trạng thái UI mượt mà.
+
+
+```
+SubscripTrack/
+│
+├── src/
+│   └── subscriptrack/
+│       ├── __init__.py         # Khởi tạo Flask app & gom các Blueprint
+│       ├── config.py           # Đọc file .env, cấu hình MAIL_SERVER, SECRET_KEY
+│       ├── models.py           # Định nghĩa bảng User, Subscription, Notification
+│       ├── extensions.py       # Khởi tạo db (SQLAlchemy), mail (Flask-Mail), login_manager
+│       │
+│       ├── blueprints/         # Chia theo tính năng chính của app
+│       │   ├── auth/           # Đăng nhập, đăng ký, quên mật khẩu
+│       │   │   └── routes.py
+│       │   ├── dashboard/      # Trang tổng quan, thống kê tiền nong bằng biểu đồ
+│       │   │   └── routes.py
+│       │   └── subscriptions/  # CRUD các dịch vụ (Netflix, Spotify...)
+│       │       └── routes.py
+│       │
+│       ├── templates/          # Giao diện hiển thị (Jinja2 HTML)
+│       │   ├── base.html       # Sidebar + Navbar chung
+│       │   ├── auth/           # login.html, register.html
+│       │   ├── dashboard/      # index.html (hiển thị biểu đồ)
+│       │   └── subs/           # add.html, list.html, edit.html
+│       │
+│       └── static/             # Chứa file CSS (Tailwind/Bootstrap), JS (vẽ biểu đồ)
+│           ├── css/
+│           └── js/             # File JS dùng Chart.js để vẽ biểu đồ chi tiêu
+│
+├── .env                        # Chứa SECRET_KEY, DATABASE_URL, cấu hình SMTP gửi Mail
+├── pyproject.toml              # Quản lý thư viện (flask, flask-sqlalchemy, celery...)
+├── run.py                      # Chạy ứng dụng (python run.py)
+└── scheduler.py                # File phụ để chạy ngầm (cron job) quét xem ai sắp đến hạn để gửi alert
+
+```

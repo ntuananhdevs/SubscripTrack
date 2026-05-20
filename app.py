@@ -1,16 +1,28 @@
 import os
 import calendar
 from datetime import date, datetime
-from flask import Flask, render_template, request, redirect, url_for
-from models import db, Subscription
+from flask import Flask, render_template, request, redirect, url_for, flash
+from models import db, Subscription, User
+from auth import auth_bp
+from flask_login import LoginManager, login_required, current_user
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///subscriptions.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 db.init_app(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'auth.login'
+login_manager.login_message = 'Vui lòng đăng nhập để tiếp tục.'
+
 USD_TO_VND_RATE = 25000
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 def add_months(sourcedate, months):
     month = sourcedate.month - 1 + months
@@ -45,8 +57,9 @@ def get_next_billing_date(start_date, cycle):
         return next_date
 
 @app.route('/')
+@login_required
 def index():
-    subs = Subscription.query.all()
+    subs = Subscription.query.filter_by(user_id=current_user.id).all()
     today = date.today()
     
     enriched_subs = []
@@ -83,6 +96,7 @@ def index():
                            total_this_month=total_vnd_this_month)
 
 @app.route('/add', methods=['POST'])
+@login_required
 def add_sub():
     name = request.form.get('name')
     amount = float(request.form.get('amount'))
@@ -99,7 +113,8 @@ def add_sub():
         currency=currency,
         cycle=cycle,
         start_date=start_date,
-        card_name=card_name
+        card_name=card_name,
+        user_id=current_user.id
     )
     db.session.add(new_sub)
     db.session.commit()
@@ -107,11 +122,17 @@ def add_sub():
     return redirect(url_for('index'))
 
 @app.route('/delete/<int:sub_id>', methods=['POST'])
+@login_required
 def delete_sub(sub_id):
     sub = Subscription.query.get_or_404(sub_id)
+    if sub.user_id != current_user.id:
+        flash('Bạn không có quyền xóa dịch vụ này.', 'error')
+        return redirect(url_for('index'))
     db.session.delete(sub)
     db.session.commit()
     return redirect(url_for('index'))
+
+app.register_blueprint(auth_bp)
 
 if __name__ == '__main__':
     with app.app_context():

@@ -1,134 +1,476 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubGuard - Hệ thống Quản lý Dịch vụ</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        border: "hsl(var(--border))",
-                        input: "hsl(var(--input))",
-                        ring: "hsl(var(--ring))",
-                        background: "hsl(var(--background))",
-                        foreground: "hsl(var(--foreground))",
-                        primary: {
-                            DEFAULT: "hsl(var(--primary))",
-                            foreground: "hsl(var(--primary-foreground))",
-                        },
-                        secondary: {
-                            DEFAULT: "hsl(var(--secondary))",
-                            foreground: "hsl(var(--secondary-foreground))",
-                        },
-                        destructive: {
-                            DEFAULT: "hsl(var(--destructive))",
-                            foreground: "hsl(var(--destructive-foreground))",
-                        },
-                        muted: {
-                            DEFAULT: "hsl(var(--muted))",
-                            foreground: "hsl(var(--muted-foreground))",
-                        },
-                        accent: {
-                            DEFAULT: "hsl(var(--accent))",
-                            foreground: "hsl(var(--accent-foreground))",
-                        },
-                        card: {
-                            DEFAULT: "hsl(var(--card))",
-                            foreground: "hsl(var(--card-foreground))",
-                        },
-                    },
-                    borderRadius: {
-                        lg: "var(--radius)",
-                        md: "calc(var(--radius) - 2px)",
-                        sm: "calc(var(--radius) - 4px)",
-                    },
-                    keyframes: {
-                        blink: {
-                            '0%, 100%': { opacity: '1', borderColor: 'hsl(var(--destructive))', boxShadow: '0 0 8px hsl(var(--destructive))' },
-                            '50%': { opacity: '0.7', borderColor: 'transparent', boxShadow: 'none' },
-                        }
-                    },
-                    animation: {
-                        blink: 'blink 1.5s ease-in-out infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root {
-            --background: 0 0% 100%;
-            --foreground: 222.2 84% 4.9%;
-            --card: 0 0% 100%;
-            --card-foreground: 222.2 84% 4.9%;
-            --popover: 0 0% 100%;
-            --popover-foreground: 222.2 84% 4.9%;
-            --primary: 221.2 83.2% 53.3%;
-            --primary-foreground: 210 40% 98%;
-            --secondary: 210 40% 96.1%;
-            --secondary-foreground: 222.2 47.4% 11.2%;
-            --muted: 210 40% 96.1%;
-            --muted-foreground: 215.4 16.3% 46.9%;
-            --accent: 210 40% 96.1%;
-            --accent-foreground: 222.2 47.4% 11.2%;
-            --destructive: 0 84.2% 60.2%;
-            --destructive-foreground: 210 40% 98%;
-            --border: 214.3 31.8% 91.4%;
-            --input: 214.3 31.8% 91.4%;
-            --ring: 221.2 83.2% 53.3%;
-            --radius: 1rem;
-        }
-        
-        body {
-            color: hsl(var(--foreground));
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubsTrack — Quản lý dịch vụ định kỳ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))",
+            },
+            secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))",
+            },
+            destructive: {
+              DEFAULT: "hsl(var(--destructive))",
+              foreground: "hsl(var(--destructive-foreground))",
+            },
+            muted: {
+              DEFAULT: "hsl(var(--muted))",
+              foreground: "hsl(var(--muted-foreground))",
+            },
+            accent: {
+              DEFAULT: "hsl(var(--accent))",
+              foreground: "hsl(var(--accent-foreground))",
+            },
+            card: {
+              DEFAULT: "hsl(var(--card))",
+              foreground: "hsl(var(--card-foreground))",
+            },
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* ── shadcn/ui component classes (plain CSS for CDN Tailwind) ── */
+    .shadcn-input {
+      display: flex;
+      height: 2.25rem;
+      width: 100%;
+      border-radius: 0.375rem;
+      border: 1px solid hsl(var(--input));
+      background: hsl(var(--background));
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .shadcn-input::file-selector-button {
+      border: 0;
+      background: transparent;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .shadcn-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+    .shadcn-input:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px hsl(var(--ring));
+    }
+    .shadcn-select {
+      display: flex;
+      height: 2.25rem;
+      width: 100%;
+      border-radius: 0.375rem;
+      border: 1px solid hsl(var(--input));
+      background: hsl(var(--background));
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .shadcn-select:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 1px hsl(var(--ring));
+    }
+    .shadcn-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      margin-bottom: 0.375rem;
+    }
+    .shadcn-btn-primary {
+      display: inline-flex;
+      height: 2.25rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      border-radius: 0.375rem;
+      background: hsl(var(--primary));
+      padding: 0 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--primary-foreground));
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      transition: background-color 0.15s ease;
+    }
+    .shadcn-btn-primary:hover {
+      background: hsl(var(--primary) / 0.9);
+    }
+    .shadcn-btn-outline {
+      display: inline-flex;
+      height: 2.25rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      border-radius: 0.375rem;
+      border: 1px solid hsl(var(--input));
+      background: hsl(var(--background));
+      padding: 0 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .shadcn-btn-outline:hover {
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
+    }
+    .shadcn-btn-ghost {
+      display: inline-flex;
+      height: 2rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      border-radius: 0.375rem;
+      padding: 0 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      transition: background-color 0.15s ease;
+    }
+    .shadcn-btn-ghost:hover {
+      background: hsl(var(--accent));
+    }
+    .shadcn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      border-radius: 0.375rem;
+      padding: 0.125rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* ── shadcn Custom Select ─────────────────── */
+    .custom-select {
+      position: relative;
+    }
+    .custom-select-trigger {
+      display: flex;
+      height: 2.25rem;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid hsl(var(--input));
+      background: hsl(var(--background));
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      color: hsl(var(--foreground));
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .custom-select-trigger:hover {
+      border-color: hsl(var(--ring) / 0.4);
+    }
+    .custom-select-trigger:focus-visible,
+    .custom-select-trigger[aria-expanded="true"] {
+      outline: none;
+      box-shadow: 0 0 0 1px hsl(var(--ring));
+      border-color: hsl(var(--ring));
+    }
+    .custom-select-chevron {
+      width: 1rem;
+      height: 1rem;
+      color: hsl(var(--muted-foreground));
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .custom-select-trigger[aria-expanded="true"] .custom-select-chevron {
+      transform: rotate(180deg);
+    }
+    .custom-select-dropdown {
+      position: absolute;
+      z-index: 60;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      border-radius: 0.375rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--background));
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      animation: fade-in 0.1s ease-out;
+    }
+    .custom-select-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      transition: background-color 0.1s ease;
+    }
+    .custom-select-item:hover {
+      background: hsl(var(--accent));
+    }
+    .custom-select-item.hovered {
+      background: hsl(var(--accent));
+    }
+    .custom-select-item.selected {
+      font-weight: 600;
+      background: hsl(var(--accent));
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 font-sans antialiased selection:bg-primary selection:text-primary-foreground">
-    <div class="relative flex min-h-screen flex-col">
-        <header class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div class="container mx-auto flex h-14 max-w-screen-2xl items-center px-4">
-                <div class="mr-4 flex">
-                    <a class="mr-6 flex items-center space-x-2" href="/">
-                        <i class="fa-solid fa-wallet text-xl"></i>
-                        <span class="font-bold sm:inline-block">SubGuard</span>
-                    </a>
+<body class="min-h-screen bg-zinc-50 font-sans antialiased">
+  <div class="relative flex min-h-screen flex-col">
+
+    {# ── Header ─────────────────────────────────── #}
+    <header class="sticky top-0 z-50 w-full border-b bg-white">
+      <div class="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        <a class="flex items-center gap-2.5 transition-opacity hover:opacity-80" href="/">
+          <span class="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-900 text-xs font-bold text-white">
+            ST
+          </span>
+          <span class="text-sm font-semibold text-zinc-900">SubsTrack</span>
+        </a>
+
+        <div class="flex items-center gap-2">
+          {% if current_user.is_authenticated %}
+            <span class="hidden text-sm text-zinc-500 sm:inline">{{ current_user.username }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="shadcn-btn-ghost text-zinc-500 hover:text-zinc-900">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              Đăng xuất
+            </a>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="shadcn-btn-primary">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+              Đăng nhập
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    {# ── Main Content ───────────────────────────── #}
+    <main class="flex-1">
+      <div class="mx-auto max-w-5xl px-4 py-8">
+        {# Flash messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="mb-6 space-y-2">
+              {% for category, message in messages %}
+                <div class="flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm shadow-sm
+                  {% if category == 'error' %}
+                    border-red-200 bg-red-50 text-red-700
+                  {% else %}
+                    border-emerald-200 bg-emerald-50 text-emerald-700
+                  {% endif %}">
+                  {% if category == 'error' %}
+                  <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                  {% else %}
+                  <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {% endif %}
+                  {{ message }}
                 </div>
-                <div class="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-                    <p class="text-sm text-muted-foreground hidden md:block">Hệ thống quản lý và cảnh báo chi phí dịch vụ định kỳ</p>
-                </div>
+              {% endfor %}
             </div>
-        </header>
-        
-        <main class="flex-1">
-            <div class="container mx-auto max-w-5xl py-8 px-4">
-                {% block content %}{% endblock %}
-            </div>
-        </main>
-    </div>
-    
-    <script>
-        function toggleAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-            }
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    {# ── Footer ─────────────────────────────────── #}
+    <footer class="border-t py-4 text-center text-xs text-zinc-400">
+      <div class="mx-auto max-w-5xl px-4">
+        SubsTrack &mdash; Theo dõi và quản lý chi phí dịch vụ định kỳ
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  {# ── Shared Modal / Flatpickr ────────────────── #}
+  <script>
+    function toggleModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('hidden');
+      el.classList.toggle('flex');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const dateInput = document.getElementById('start_date');
+      if (dateInput && typeof flatpickr !== 'undefined') {
+        flatpickr(dateInput, {
+          dateFormat: 'Y-m-d',
+          altInput: true,
+          altFormat: 'd/m/Y',
+          altInputClass: 'shadcn-input cursor-pointer',
+          disableMobile: true,
+        });
+      }
+    });
+  </script>
+
+  {# ── Custom Select Component (shadcn-like) ──── #}
+  <script>
+    class CustomSelect {
+      constructor(el) {
+        this.el = el;
+        this.trigger = el.querySelector('.custom-select-trigger');
+        this.dropdown = el.querySelector('.custom-select-dropdown');
+        this.items = el.querySelectorAll('.custom-select-item');
+        this.valueEl = el.querySelector('.custom-select-value');
+        this.hiddenInput = el.querySelector('input[type="hidden"]');
+        this.name = el.dataset.name;
+
+        // --- Event listeners ---
+        this.trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggle();
+        });
+
+        this.items.forEach((item) => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.select(item);
+          });
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+          if (!this.el.contains(e.target)) this.close();
+        });
+
+        // Keyboard navigation
+        this.trigger.addEventListener('keydown', (e) => this._handleTriggerKey(e));
+        this.dropdown.addEventListener('keydown', (e) => this._handleDropdownKey(e));
+      }
+
+      toggle() {
+        const isOpen = !this.dropdown.classList.contains('hidden');
+        if (isOpen) {
+          this.close();
+        } else {
+          this.open();
         }
-    </script>
+      }
+
+      open() {
+        this.dropdown.classList.remove('hidden');
+        this.trigger.setAttribute('aria-expanded', 'true');
+        // Focus the selected item or first item
+        const selected = this.dropdown.querySelector('.selected');
+        if (selected) {
+          selected.focus();
+        } else {
+          this.items[0]?.focus();
+        }
+      }
+
+      close() {
+        this.dropdown.classList.add('hidden');
+        this.trigger.setAttribute('aria-expanded', 'false');
+      }
+
+      select(item) {
+        this.items.forEach((i) => {
+          i.classList.remove('selected');
+          i.removeAttribute('aria-selected');
+        });
+        item.classList.add('selected');
+        item.setAttribute('aria-selected', 'true');
+        this.valueEl.textContent = item.textContent;
+        if (this.hiddenInput) {
+          this.hiddenInput.value = item.dataset.value;
+        }
+        this.close();
+        this.trigger.focus();
+      }
+
+      _handleTriggerKey(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.toggle();
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          this.open();
+        }
+        if (e.key === 'Escape') {
+          this.close();
+        }
+      }
+
+      _handleDropdownKey(e) {
+        const items = Array.from(this.items);
+        const currentIndex = items.indexOf(document.activeElement);
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const next = items[Math.min(currentIndex + 1, items.length - 1)];
+          next?.focus();
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prev = items[Math.max(currentIndex - 1, 0)];
+          prev?.focus();
+        }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (document.activeElement?.classList.contains('custom-select-item')) {
+            this.select(document.activeElement);
+          }
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.close();
+        }
+        if (e.key === 'Tab') {
+          this.close();
+        }
+      }
+    }
+
+    // Auto-initialize all custom selects on DOM ready
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.custom-select').forEach((el) => new CustomSelect(el));
+    });
+  </script>
 </body>
 </html>
