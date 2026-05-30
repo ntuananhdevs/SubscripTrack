@@ -132,7 +132,10 @@
       <div class="p-6">
         {% if category_labels %}
         <div class="mx-auto" style="max-width: 260px;">
-          <canvas id="categoryPieChart"></canvas>
+          <canvas id="categoryPieChart"
+                  data-labels="{{ category_labels | tojson }}"
+                  data-values="{{ category_values | tojson }}"
+                  data-colors="{{ category_colors | tojson }}"></canvas>
         </div>
         <div class="mt-5 space-y-2">
           {% for label in category_labels %}
@@ -176,7 +179,10 @@
       </div>
       <div class="p-6">
         {% if monthly_trend_values and monthly_trend_values|sum > 0 %}
-        <canvas id="trendBarChart" class="w-full"></canvas>
+        <canvas id="trendBarChart"
+                data-labels="{{ monthly_trend_labels | tojson }}"
+                data-values="{{ monthly_trend_values | tojson }}"
+                class="w-full"></canvas>
         {% else %}
         <div class="flex flex-col items-center py-14 text-center">
           <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
@@ -351,143 +357,5 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const isDark = document.documentElement.classList.contains('dark');
-  const textColor = isDark ? '#a1a1aa' : '#71717a';
-  const gridColor = isDark ? 'rgba(63, 63, 70, 0.3)' : 'rgba(228, 228, 231, 0.5)';
-
-  // ── Pie Chart ──────────────────────────────────
-  const pieCanvas = document.getElementById('categoryPieChart');
-  if (pieCanvas) {
-    const labels = {{ category_labels | tojson }};
-    const values = {{ category_values | tojson }};
-    const colors = {{ category_colors | tojson }};
-
-    if (labels.length > 0 && values.some(v => v > 0)) {
-      new Chart(pieCanvas, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: colors,
-            borderColor: isDark ? '#27272a' : '#ffffff',
-            borderWidth: 2,
-            hoverOffset: 8,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          cutout: '62%',
-          plugins: {
-            legend: {
-              display: false,
-            },
-            tooltip: {
-              backgroundColor: isDark ? '#18181b' : '#ffffff',
-              titleColor: isDark ? '#f4f4f5' : '#18181b',
-              bodyColor: isDark ? '#a1a1aa' : '#71717a',
-              borderColor: isDark ? '#27272a' : '#e4e4e7',
-              borderWidth: 1,
-              padding: 10,
-              cornerRadius: 8,
-              displayColors: true,
-              callbacks: {
-                label: function (ctx) {
-                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const pct = ((ctx.parsed / total) * 100).toFixed(1);
-                  const val = ctx.parsed.toLocaleString('vi-VN');
-                  return ` ${ctx.label}: ${val} VND (${pct}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-  }
-
-  // ── Bar Chart ──────────────────────────────────
-  const barCanvas = document.getElementById('trendBarChart');
-  if (barCanvas) {
-    const labels = {{ monthly_trend_labels | tojson }};
-    const values = {{ monthly_trend_values | tojson }};
-
-    if (labels.length > 0 && values.some(v => v > 0)) {
-      new Chart(barCanvas, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Chi phí (VND)',
-            data: values,
-            backgroundColor: values.map(function (v) {
-              if (v === values[values.length - 1]) {
-                return isDark ? 'rgba(99, 102, 241, 0.8)' : 'rgba(99, 102, 241, 0.85)';
-              }
-              return isDark ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.25)';
-            }),
-            borderColor: values.map(function (v, i) {
-              if (i === values.length - 1) return '#6366f1';
-              return isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)';
-            }),
-            borderWidth: function (ctx) {
-              return ctx.dataIndex === ctx.dataset.data.length - 1 ? 2 : 1;
-            },
-            borderRadius: 6,
-            borderSkipped: false,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          aspectRatio: 2.5,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: isDark ? '#18181b' : '#ffffff',
-              titleColor: isDark ? '#f4f4f5' : '#18181b',
-              bodyColor: isDark ? '#a1a1aa' : '#71717a',
-              borderColor: isDark ? '#27272a' : '#e4e4e7',
-              borderWidth: 1,
-              padding: 10,
-              cornerRadius: 8,
-              callbacks: {
-                label: function (ctx) {
-                  return ' ' + ctx.parsed.y.toLocaleString('vi-VN') + ' VND';
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: { color: gridColor },
-              ticks: {
-                color: textColor,
-                font: { size: 11 },
-                callback: function (val) {
-                  if (val >= 1000000) return (val / 1000000).toFixed(1) + 'tr';
-                  if (val >= 1000) return (val / 1000).toFixed(0) + 'k';
-                  return val;
-                }
-              }
-            },
-            x: {
-              grid: { display: false },
-              ticks: {
-                color: textColor,
-                font: { size: 10 },
-                maxRotation: 0,
-              }
-            }
-          }
-        }
-      });
-    }
-  }
-});
-</script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
 {% endblock %}
