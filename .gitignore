@@ -4,4 +4,6 @@ __pycache__/
 *.db
 .states
 .web
-.venv/
+venv/
+instance/
+.env

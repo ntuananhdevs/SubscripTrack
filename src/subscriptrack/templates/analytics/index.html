@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col gap-8">
+
+  {# ── Page Header ── #}
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Phân tích & Thống kê
+      </h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        Bức tranh tài chính tổng thể về các dịch vụ định kỳ của bạn
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      {# Income input #}
+      <div class="flex items-center gap-2">
+        <label class="whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          Thu nhập tháng:
+        </label>
+        <form method="GET" action="{{ url_for('analytics.index') }}" class="flex items-center gap-2">
+          <input type="number" name="income" value="{{ income if income > 0 else '' }}"
+                 placeholder="0"
+                 class="h-8 w-32 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:focus:border-indigo-500 dark:focus:ring-indigo-900"
+                 min="0" step="100000" />
+          <span class="text-xs text-zinc-400 dark:text-zinc-500">VND</span>
+          <button type="submit"
+                  class="shadcn-btn-primary h-8 px-3 text-xs">
+            Áp dụng
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {# ── Summary Cards ── #}
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {# Card: This month #}
+    <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div class="p-5">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Tháng này</p>
+            <p class="mt-0.5 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {{ "{:,.0f}".format(total_this_month).replace(',', '.') }}
+            </p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">VND</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Card: Next month #}
+    <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div class="p-5">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Tháng tới</p>
+            <p class="mt-0.5 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {{ "{:,.0f}".format(total_next_month).replace(',', '.') }}
+            </p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">VND</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Card: Monthly estimate #}
+    <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div class="p-5">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Trung bình tháng</p>
+            <p class="mt-0.5 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {{ "{:,.0f}".format(total_monthly_estimate).replace(',', '.') }}
+            </p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">VND/tháng</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Card: Yearly estimate #}
+    <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div class="p-5">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Ước tính cả năm</p>
+            <p class="mt-0.5 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {{ "{:,.0f}".format(total_year_estimate).replace(',', '.') }}
+            </p>
+            <p class="text-[10px] text-zinc-400 dark:text-zinc-500">VND/năm</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Charts Row ── #}
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+    {# Pie Chart: Category breakdown #}
+    <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-2">
+      <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          Chi tiêu theo danh mục
+        </h2>
+        <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+          Tỷ lệ chi tiêu hàng tháng theo từng nhóm
+        </p>
+      </div>
+      <div class="p-6">
+        {% if category_labels %}
+        <div class="mx-auto" style="max-width: 260px;">
+          <canvas id="categoryPieChart"></canvas>
+        </div>
+        <div class="mt-5 space-y-2">
+          {% for label in category_labels %}
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                    style="background-color: {{ category_colors[loop.index0] }}"></span>
+              <span class="truncate text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ label }}</span>
+            </div>
+            <span class="shrink-0 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+              {{ "{:,.0f}".format(category_values[loop.index0]).replace(',', '.') }} VND
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="flex flex-col items-center py-10 text-center">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
+            <svg class="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+          </div>
+          <p class="mt-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">Chưa có dữ liệu</p>
+          <p class="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+            Thêm dịch vụ để xem thống kê theo danh mục
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Bar Chart: Monthly trend #}
+    <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
+      <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+        <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          Xu hướng chi tiêu
+        </h2>
+        <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+          Chi phí ước tính theo từng tháng (6 tháng gần nhất)
+        </p>
+      </div>
+      <div class="p-6">
+        {% if monthly_trend_values and monthly_trend_values|sum > 0 %}
+        <canvas id="trendBarChart" class="w-full"></canvas>
+        {% else %}
+        <div class="flex flex-col items-center py-14 text-center">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
+            <svg class="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          </div>
+          <p class="mt-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">Chưa có dữ liệu</p>
+          <p class="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+            Thêm dịch vụ để xem xu hướng chi tiêu theo thời gian
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ── Bleeding Index ── #}
+  <div class="rounded-xl border bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl
+            {% if bleeding_severity == 'good' %}bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400
+            {% elif bleeding_severity == 'warning' %}bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400
+            {% elif bleeding_severity == 'danger' %}bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400
+            {% else %}bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400{% endif %}">
+            {% if bleeding_icon == 'shield-check' %}
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            {% elif bleeding_icon == 'exclamation' %}
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            {% elif bleeding_icon == 'exclamation-triangle' %}
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            {% else %}
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+            </svg>
+            {% endif %}
+          </div>
+          <div>
+            <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Chỉ số Chảy máu tiền (Bleeding Index)
+            </h2>
+            <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+              Đánh giá mức độ kiểm soát chi tiêu dịch vụ định kỳ
+            </p>
+          </div>
+        </div>
+        {# Score badge #}
+        <div class="flex shrink-0 items-center gap-3">
+          <div class="text-right">
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Điểm số</p>
+            <p class="text-2xl font-bold tracking-tight
+              {% if bleeding_severity == 'good' %}text-emerald-600 dark:text-emerald-400
+              {% elif bleeding_severity == 'warning' %}text-amber-600 dark:text-amber-400
+              {% elif bleeding_severity == 'danger' %}text-red-600 dark:text-red-400
+              {% else %}text-rose-600 dark:text-rose-400{% endif %}">
+              {{ bleeding_score }}/100
+            </p>
+          </div>
+          <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold
+            {% if bleeding_severity == 'good' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300
+            {% elif bleeding_severity == 'warning' %}bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300
+            {% elif bleeding_severity == 'danger' %}bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300
+            {% else %}bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300{% endif %}">
+            {{ bleeding_label }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6">
+      {# Progress bar #}
+      <div class="mb-6">
+        <div class="h-3 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <div class="h-full rounded-full transition-all duration-700 ease-out"
+               style="width: {{ bleeding_score }}%;
+                      {% if bleeding_severity == 'good' %}background: linear-gradient(90deg, #10b981, #34d399);
+                      {% elif bleeding_severity == 'warning' %}background: linear-gradient(90deg, #f59e0b, #fbbf24);
+                      {% elif bleeding_severity == 'danger' %}background: linear-gradient(90deg, #ef4444, #f87171);
+                      {% else %}background: linear-gradient(90deg, #e11d48, #fb7185);{% endif %}">
+          </div>
+        </div>
+        <div class="mt-1 flex justify-between text-[10px] text-zinc-400 dark:text-zinc-500">
+          <span>Lành mạnh</span>
+          <span>Nguy hiểm</span>
+        </div>
+      </div>
+
+      {# Summary advice #}
+      <div class="mb-6 rounded-lg border bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 shrink-0">
+            {% if bleeding_severity == 'good' %}
+            <svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {% else %}
+            <svg class="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            {% endif %}
+          </div>
+          <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            {{ bleeding_summary }}
+          </p>
+        </div>
+      </div>
+
+      {# Factors Table #}
+      <div class="space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          Các yếu tố ảnh hưởng
+        </p>
+        <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+          {% for factor in bleeding_factors %}
+          <div class="flex items-start gap-4 py-3">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+              {% if loop.first %}bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400
+              {% elif loop.index == 2 %}bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400
+              {% else %}bg-zinc-50 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+              {% if factor.icon == 'hashtag' %}
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-6.6-19.5l-3.9 19.5" />
+              </svg>
+              {% elif factor.icon == 'wallet' %}
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+              </svg>
+              {% elif factor.icon == 'clone' %}
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+              </svg>
+              {% elif factor.icon == 'infinity' %}
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ factor.label }}</p>
+                <span class="shrink-0 text-xs font-bold
+                  {% if factor.score == 0 %}text-emerald-500
+                  {% elif factor.score <= 15 %}text-amber-500
+                  {% else %}text-red-500{% endif %}">
+                  +{{ factor.score }}
+                </span>
+              </div>
+              <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{{ factor.detail }}</p>
+              <p class="mt-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <svg class="mr-1 inline-block h-3 w-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                </svg>
+                {{ factor.advice }}
+              </p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#a1a1aa' : '#71717a';
+  const gridColor = isDark ? 'rgba(63, 63, 70, 0.3)' : 'rgba(228, 228, 231, 0.5)';
+
+  // ── Pie Chart ──────────────────────────────────
+  const pieCanvas = document.getElementById('categoryPieChart');
+  if (pieCanvas) {
+    const labels = {{ category_labels | tojson }};
+    const values = {{ category_values | tojson }};
+    const colors = {{ category_colors | tojson }};
+
+    if (labels.length > 0 && values.some(v => v > 0)) {
+      new Chart(pieCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderColor: isDark ? '#27272a' : '#ffffff',
+            borderWidth: 2,
+            hoverOffset: 8,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#18181b' : '#ffffff',
+              titleColor: isDark ? '#f4f4f5' : '#18181b',
+              bodyColor: isDark ? '#a1a1aa' : '#71717a',
+              borderColor: isDark ? '#27272a' : '#e4e4e7',
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 8,
+              displayColors: true,
+              callbacks: {
+                label: function (ctx) {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                  const val = ctx.parsed.toLocaleString('vi-VN');
+                  return ` ${ctx.label}: ${val} VND (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // ── Bar Chart ──────────────────────────────────
+  const barCanvas = document.getElementById('trendBarChart');
+  if (barCanvas) {
+    const labels = {{ monthly_trend_labels | tojson }};
+    const values = {{ monthly_trend_values | tojson }};
+
+    if (labels.length > 0 && values.some(v => v > 0)) {
+      new Chart(barCanvas, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Chi phí (VND)',
+            data: values,
+            backgroundColor: values.map(function (v) {
+              if (v === values[values.length - 1]) {
+                return isDark ? 'rgba(99, 102, 241, 0.8)' : 'rgba(99, 102, 241, 0.85)';
+              }
+              return isDark ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.25)';
+            }),
+            borderColor: values.map(function (v, i) {
+              if (i === values.length - 1) return '#6366f1';
+              return isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.1)';
+            }),
+            borderWidth: function (ctx) {
+              return ctx.dataIndex === ctx.dataset.data.length - 1 ? 2 : 1;
+            },
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2.5,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDark ? '#18181b' : '#ffffff',
+              titleColor: isDark ? '#f4f4f5' : '#18181b',
+              bodyColor: isDark ? '#a1a1aa' : '#71717a',
+              borderColor: isDark ? '#27272a' : '#e4e4e7',
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: function (ctx) {
+                  return ' ' + ctx.parsed.y.toLocaleString('vi-VN') + ' VND';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: gridColor },
+              ticks: {
+                color: textColor,
+                font: { size: 11 },
+                callback: function (val) {
+                  if (val >= 1000000) return (val / 1000000).toFixed(1) + 'tr';
+                  if (val >= 1000) return (val / 1000).toFixed(0) + 'k';
+                  return val;
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: textColor,
+                font: { size: 10 },
+                maxRotation: 0,
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+});
+</script>
+{% endblock %}
