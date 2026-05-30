@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, date
 from flask import request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from subscriptrack.extensions import db
 from subscriptrack.models import Subscription
 from subscriptrack.blueprints.subscriptions import subscriptions_bp
 from subscriptrack.blueprints.dashboard.routes import render_dashboard
-from subscriptrack.utils import auto_categorize
+from subscriptrack.utils import auto_categorize, add_months
 
 
 def _want_json():
@@ -22,8 +22,8 @@ def add():
     cycle = request.form.get('cycle', 'monthly')
     category_raw = request.form.get('category', '').strip()
     start_date_str = request.form.get('start_date', '')
-    end_date_str = request.form.get('end_date', '')
-    card_name = request.form.get('card_name', '').strip()
+    duration_raw = request.form.get('duration', '')
+    duration_unit = request.form.get('duration_unit', '')
 
     errors = {}
 
@@ -33,10 +33,6 @@ def add():
         errors['amount'] = 'Vui lòng nhập số tiền.'
     if not start_date_str:
         errors['start_date'] = 'Vui lòng chọn ngày bắt đầu.'
-    if not end_date_str:
-        errors['end_date'] = 'Vui lòng chọn ngày kết thúc.'
-    if not card_name:
-        errors['card_name'] = 'Vui lòng nhập thẻ thanh toán.'
 
     # Auto-categorize if not provided
     if not category_raw:
@@ -48,10 +44,9 @@ def add():
         try:
             amount = float(amount_raw)
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-
-            if end_date <= start_date:
-                errors['end_date'] = 'Ngày kết thúc phải sau ngày bắt đầu.'
+            duration = int(duration_raw) if duration_raw else None
+            if duration is not None and duration <= 0:
+                errors['duration'] = 'Thời gian phải lớn hơn 0.'
             if currency == 'VND' and amount <= 1000:
                 errors['amount'] = 'Số tiền VND phải lớn hơn 1.000.'
         except (ValueError, TypeError):
@@ -73,8 +68,8 @@ def add():
         cycle=cycle,
         category=category,
         start_date=start_date,
-        end_date=end_date,
-        card_name=card_name,
+        duration=duration,
+        duration_unit=duration_unit if duration_unit else None,
         user_id=current_user.id,
     )
     db.session.add(new_sub)
@@ -101,8 +96,8 @@ def edit(sub_id):
     cycle = request.form.get('cycle', 'monthly')
     category_raw = request.form.get('category', '').strip()
     start_date_str = request.form.get('start_date', '')
-    end_date_str = request.form.get('end_date', '')
-    card_name = request.form.get('card_name', '').strip()
+    duration_raw = request.form.get('duration', '')
+    duration_unit = request.form.get('duration_unit', '')
 
     errors = {}
 
@@ -112,10 +107,6 @@ def edit(sub_id):
         errors['amount'] = 'Vui lòng nhập số tiền.'
     if not start_date_str:
         errors['start_date'] = 'Vui lòng chọn ngày bắt đầu.'
-    if not end_date_str:
-        errors['end_date'] = 'Vui lòng chọn ngày kết thúc.'
-    if not card_name:
-        errors['card_name'] = 'Vui lòng nhập thẻ thanh toán.'
 
     # Auto-categorize if not provided
     if not category_raw:
@@ -131,10 +122,12 @@ def edit(sub_id):
             sub.cycle = cycle
             sub.category = category
             sub.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            sub.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-
-            if sub.end_date <= sub.start_date:
-                errors['end_date'] = 'Ngày kết thúc phải sau ngày bắt đầu.'
+            duration = int(duration_raw) if duration_raw else None
+            if duration is not None and duration <= 0:
+                errors['duration'] = 'Thời gian phải lớn hơn 0.'
+            else:
+                sub.duration = duration
+                sub.duration_unit = duration_unit if duration_unit else None
             if currency == 'VND' and sub.amount <= 1000:
                 errors['amount'] = 'Số tiền VND phải lớn hơn 1.000.'
         except (ValueError, TypeError):

@@ -16,11 +16,33 @@
           <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
             Tổng thanh toán tháng này
           </p>
-          <div class="mt-0.5 flex items-baseline gap-1.5">
-            <span class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <div class="mt-0.5 flex items-baseline gap-2">
+            <span class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100" id="summaryAmount">
               {{ "{:,.0f}".format(total_this_month).replace(',', '.') }}
             </span>
-            <span class="text-sm font-medium text-zinc-400 dark:text-zinc-500">VND</span>
+            <div class="relative group">
+              <button type="button" 
+                      id="currencyToggle"
+                      class="text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1"
+                      title="Chuyển đổi đơn vị tiền tệ">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6-4v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+              <div id="currencyMenu" class="absolute left-1/2 -translate-x-1/2 mt-2 w-20 rounded-lg border bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all dark:border-zinc-700 dark:bg-zinc-800 z-10">
+                <button type="button" 
+                        onclick="switchCurrency('VND')"
+                        class="block w-full px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700 rounded-t-lg">
+                  VND
+                </button>
+                <button type="button" 
+                        onclick="switchCurrency('USD')"
+                        class="block w-full px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700 rounded-b-lg">
+                  USD
+                </button>
+              </div>
+            </div>
+            <span class="text-sm font-medium text-zinc-400 dark:text-zinc-500" id="currencyDisplay">VND</span>
           </div>
           <p class="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
             Dựa trên các dịch vụ đến hạn trong tháng
@@ -108,7 +130,7 @@
               </div>
               <div class="ml-3 flex shrink-0 items-center gap-1">
                 <button type="button"
-                        onclick='openEditModal({{ {"id": sub.id, "name": sub.name, "amount": sub.amount, "currency": sub.currency, "cycle": sub.cycle, "category": sub.category, "start_date": sub.start_date.strftime("%Y-%m-%d"), "end_date": sub.end_date.strftime("%Y-%m-%d") if sub.end_date else "", "card_name": sub.card_name} | tojson }})'
+                        onclick='openEditModal({{ {"id": sub.id, "name": sub.name, "amount": sub.amount, "currency": sub.currency, "cycle": sub.cycle, "category": sub.category, "start_date": sub.start_date.strftime("%Y-%m-%d"), "duration": sub.duration, "duration_unit": sub.duration_unit or ""} | tojson }})'
                         class="inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-400 opacity-0 transition-all hover:bg-blue-50 hover:text-blue-500 group-hover:opacity-100"
                         title="Sửa">
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -136,13 +158,6 @@
               <span class="text-sm font-medium text-zinc-400 dark:text-zinc-500">{{ sub.currency }}</span>
             </div>
 
-            {# Card name #}
-            <div class="mt-2 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-              </svg>
-              <span class="truncate">{{ sub.card_name }}</span>
-            </div>
           </div>
 
           {# Footer #}
@@ -158,16 +173,24 @@
                     {{ sub.next_date.strftime('%d/%m/%Y') }}
                   </div>
                 </div>
-                {% if sub.end_date %}
+                {% if sub.duration and sub.duration_unit %}
                 <div class="min-w-0">
-                  <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Kết thúc</p>
+                  <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Thời hạn</p>
                   <div class="mt-0.5 flex items-center gap-1 text-sm font-medium text-rose-500">
-                    {% if sub.end_date < sub.next_date %}
                     <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
+                    {% if sub.duration_unit == 'daily' %}
+                      {{ sub.duration }} ngày
+                    {% elif sub.duration_unit == 'weekly' %}
+                      {{ sub.duration }} tuần
+                    {% elif sub.duration_unit == 'monthly' %}
+                      {{ sub.duration }} tháng
+                    {% elif sub.duration_unit == 'yearly' %}
+                      {{ sub.duration }} năm
+                    {% else %}
+                      {{ sub.duration }} {{ sub.duration_unit }}
                     {% endif %}
-                    {{ sub.end_date.strftime('%d/%m/%Y') }}
                   </div>
                 </div>
                 {% endif %}
@@ -327,8 +350,8 @@
               </svg>
             </button>
             <div class="custom-select-dropdown hidden" role="listbox">
-              <div class="custom-select-item selected" role="option" aria-selected="true" data-value="monthly" tabindex="0">Hàng tháng</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="weekly" tabindex="0">Hàng tuần</div>
+              <div class="custom-select-item selected" role="option" aria-selected="true" data-value="monthly" tabindex="0">Hàng tháng</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="yearly" tabindex="0">Hàng năm</div>
             </div>
             <input type="hidden" name="cycle" value="monthly">
@@ -339,13 +362,13 @@
           <label class="shadcn-label mb-3">Danh mục</label>
           <div class="custom-select" data-name="category">
             <button type="button" class="custom-select-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
-              <span class="custom-select-value">Tự động phát hiện</span>
+              <span class="custom-select-value">Danh mục</span>
               <svg class="custom-select-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
             <div class="custom-select-dropdown hidden" role="listbox">
-              <div class="custom-select-item" role="option" aria-selected="false" data-value="" tabindex="0">Tự động phát hiện</div>
+              <div class="custom-select-item" role="option" aria-selected="false" data-value="" tabindex="0">Danh mục</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="Giải trí" tabindex="0">Giải trí</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="Lưu trữ & Cloud" tabindex="0">Lưu trữ & Cloud</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="Công cụ & Phần mềm" tabindex="0">Công cụ & Phần mềm</div>
@@ -363,34 +386,41 @@
         </div>
       </div>
 
-      <div>
-        <label class="shadcn-label mb-3">Ngày tháng</label>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <input type="text" id="start_date" name="start_date" placeholder="Bắt đầu"
-                   class="shadcn-input cursor-pointer" readonly="readonly" />
-            {% if errors.get('start_date') %}
-            <p class="mt-1 text-xs text-red-500">{{ errors['start_date'] }}</p>
-            {% endif %}
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="shadcn-label mb-3">Ngày bắt đầu</label>
+          <input type="text" id="start_date" name="start_date" placeholder="Bắt đầu"
+                 class="shadcn-input cursor-pointer" readonly="readonly" />
+          {% if errors.get('start_date') %}
+          <p class="mt-1 text-xs text-red-500">{{ errors['start_date'] }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label class="shadcn-label mb-3">Thời hạn</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="duration" name="duration" min="1" placeholder="Số lượng"
+                   class="shadcn-input" />
+            <div class="custom-select" data-name="duration_unit">
+              <button type="button" class="custom-select-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                <span class="custom-select-value">Tháng</span>
+                <svg class="custom-select-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div class="custom-select-dropdown hidden" role="listbox">
+                <div class="custom-select-item" role="option" aria-selected="false" data-value="weekly" tabindex="0">Tuần</div>
+                <div class="custom-select-item selected" role="option" aria-selected="true" data-value="monthly" tabindex="0">Tháng</div>
+                <div class="custom-select-item" role="option" aria-selected="false" data-value="yearly" tabindex="0">Năm</div>
+              </div>
+              <input type="hidden" name="duration_unit" value="monthly" />
+            </div>
           </div>
-          <div>
-            <input type="text" id="end_date" name="end_date" placeholder="Kết thúc"
-                   class="shadcn-input cursor-pointer" readonly="readonly" />
-            {% if errors.get('end_date') %}
-            <p class="mt-1 text-xs text-red-500">{{ errors['end_date'] }}</p>
-            {% endif %}
-          </div>
+          {% if errors.get('duration') %}
+          <p class="mt-1 text-xs text-red-500">{{ errors['duration'] }}</p>
+          {% endif %}
         </div>
       </div>
 
-      <div>
-        <label for="card_name" class="shadcn-label">Thẻ / Ví thanh toán</label>
-        <input type="text" id="card_name" name="card_name" placeholder="Visa Techcombank..."
-               class="shadcn-input" />
-        {% if errors.get('card_name') %}
-        <p class="mt-1 text-xs text-red-500">{{ errors['card_name'] }}</p>
-        {% endif %}
-      </div>
 
       <div class="flex items-center justify-end gap-3 pt-1">
         <button type="button" onclick="toggleModal('addModal')"
@@ -488,8 +518,8 @@
               </svg>
             </button>
             <div class="custom-select-dropdown hidden" role="listbox">
-              <div class="custom-select-item selected" role="option" aria-selected="true" data-value="monthly" tabindex="0">Hàng tháng</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="weekly" tabindex="0">Hàng tuần</div>
+              <div class="custom-select-item selected" role="option" aria-selected="true" data-value="monthly" tabindex="0">Hàng tháng</div>
               <div class="custom-select-item" role="option" aria-selected="false" data-value="yearly" tabindex="0">Hàng năm</div>
             </div>
             <input type="hidden" name="cycle" value="monthly">
@@ -524,34 +554,41 @@
         </div>
       </div>
 
-      <div>
-        <label class="shadcn-label mb-3">Ngày tháng</label>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <input type="text" id="edit_start_date" name="start_date" placeholder="Bắt đầu"
-                   class="shadcn-input cursor-pointer" readonly="readonly" />
-            {% if errors.get('start_date') %}
-            <p class="mt-1 text-xs text-red-500">{{ errors['start_date'] }}</p>
-            {% endif %}
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="shadcn-label mb-3">Ngày bắt đầu</label>
+          <input type="text" id="edit_start_date" name="start_date" placeholder="Bắt đầu"
+                 class="shadcn-input cursor-pointer" readonly="readonly" />
+          {% if errors.get('start_date') %}
+          <p class="mt-1 text-xs text-red-500">{{ errors['start_date'] }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label class="shadcn-label mb-3">Thời hạn</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="edit_duration" name="duration" min="1" placeholder="Số lượng"
+                   class="shadcn-input" />
+            <div class="custom-select" data-name="duration_unit">
+              <button type="button" class="custom-select-trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                <span class="custom-select-value">Tháng</span>
+                <svg class="custom-select-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div class="custom-select-dropdown hidden" role="listbox">
+                <div class="custom-select-item" role="option" aria-selected="false" data-value="weekly" tabindex="0">Tuần</div>
+                <div class="custom-select-item selected" role="option" aria-selected="true" data-value="monthly" tabindex="0">Tháng</div>
+                <div class="custom-select-item" role="option" aria-selected="false" data-value="yearly" tabindex="0">Năm</div>
+              </div>
+              <input type="hidden" name="duration_unit" value="" />
+            </div>
           </div>
-          <div>
-            <input type="text" id="edit_end_date" name="end_date" placeholder="Kết thúc"
-                   class="shadcn-input cursor-pointer" readonly="readonly" />
-            {% if errors.get('end_date') %}
-            <p class="mt-1 text-xs text-red-500">{{ errors['end_date'] }}</p>
-            {% endif %}
-          </div>
+          {% if errors.get('duration') %}
+          <p class="mt-1 text-xs text-red-500">{{ errors['duration'] }}</p>
+          {% endif %}
         </div>
       </div>
 
-      <div>
-        <label for="edit_card_name" class="shadcn-label">Thẻ / Ví thanh toán</label>
-        <input type="text" id="edit_card_name" name="card_name" placeholder="Visa Techcombank..."
-               class="shadcn-input" />
-        {% if errors.get('card_name') %}
-        <p class="mt-1 text-xs text-red-500">{{ errors['card_name'] }}</p>
-        {% endif %}
-      </div>
 
       <div class="flex items-center justify-end gap-3 pt-1">
         <button type="button" onclick="toggleModal('editModal')"

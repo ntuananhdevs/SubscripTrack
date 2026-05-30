@@ -6,9 +6,6 @@
 // ── Helpers ───────────────────────────────────────────────────
 
 let addFlatpickr = null;
-let addEndFlatpickr = null;
-let editFlatpickr = null;
-let editEndFlatpickr = null;
 
 /** Submit a form via fetch (AJAX) and call the appropriate handler. */
 function submitFormAjax(form, { onSuccess, onError }) {
@@ -87,6 +84,10 @@ function refreshDashboard() {
       const currentContainer = document.getElementById('dashboard-content');
       if (newContainer && currentContainer) {
         currentContainer.innerHTML = newContainer.innerHTML;
+        // Reinit Summary Amount to get the updated total_this_month from backend
+        initSummaryAmount();
+        // Reinit custom selects if they exist in the new content
+        initCustomSelects();
       }
     });
 }
@@ -94,28 +95,14 @@ function refreshDashboard() {
 /** Initialise flatpickr for the add-modal date fields. */
 function initAddFlatpickr() {
   const startInput = document.getElementById('start_date');
-  const endInput = document.getElementById('end_date');
 
   if (addFlatpickr) {
     try { addFlatpickr.destroy(); } catch (_) {}
     addFlatpickr = null;
   }
-  if (addEndFlatpickr) {
-    try { addEndFlatpickr.destroy(); } catch (_) {}
-    addEndFlatpickr = null;
-  }
 
   if (startInput && typeof flatpickr !== 'undefined') {
     addFlatpickr = flatpickr(startInput, {
-      dateFormat: 'Y-m-d',
-      altInput: true,
-      altFormat: 'd/m/Y',
-      altInputClass: 'shadcn-input cursor-pointer',
-      disableMobile: true,
-    });
-  }
-  if (endInput && typeof flatpickr !== 'undefined') {
-    addEndFlatpickr = flatpickr(endInput, {
       dateFormat: 'Y-m-d',
       altInput: true,
       altFormat: 'd/m/Y',
@@ -136,12 +123,11 @@ function initCustomSelects() {
 
 function openEditModal(data) {
   const form = document.getElementById('editForm');
-  form.action = document.getElementById('editForm').getAttribute('data-base-action') ||
-    window.location.pathname.replace('/dashboard', '/subscriptions/edit/') + data.id;
+  const baseAction = document.getElementById('editForm').getAttribute('data-base-action');
+  form.action = baseAction.replace('/0', '/' + data.id);
 
   document.getElementById('edit_name').value = data.name;
   document.getElementById('edit_amount').value = data.amount;
-  document.getElementById('edit_card_name').value = data.card_name;
 
   // Set currency custom select
   const currencySelect = document.querySelector(
@@ -218,21 +204,30 @@ function openEditModal(data) {
     }
   }
 
-  // Set end date with flatpickr
-  const endDateInput = document.getElementById('edit_end_date');
-  if (endDateInput) {
-    if (!editEndFlatpickr && typeof flatpickr !== 'undefined') {
-      editEndFlatpickr = flatpickr(endDateInput, {
-        dateFormat: 'Y-m-d',
-        altInput: true,
-        altFormat: 'd/m/Y',
-        altInputClass: 'shadcn-input cursor-pointer',
-        disableMobile: true,
-      });
-    }
-    if (editEndFlatpickr) {
-      editEndFlatpickr.setDate(data.end_date || '');
-    }
+  // Set duration
+  const durationInput = document.getElementById('edit_duration');
+  if (durationInput) {
+    durationInput.value = data.duration || '';
+  }
+
+  // Set duration_unit custom select
+  const durUnitSelect = document.querySelector(
+    '#editModal .custom-select[data-name="duration_unit"]'
+  );
+  if (durUnitSelect) {
+    const items = durUnitSelect.querySelectorAll('.custom-select-item');
+    const hiddenInput = durUnitSelect.querySelector('input[type="hidden"]');
+    const valueEl = durUnitSelect.querySelector('.custom-select-value');
+    const durUnit = data.duration_unit || '';
+    items.forEach(function (item) {
+      const isMatch = item.dataset.value === durUnit;
+      item.classList.toggle('selected', isMatch);
+      item.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+      if (isMatch) {
+        valueEl.textContent = item.textContent;
+        if (hiddenInput) hiddenInput.value = durUnit;
+      }
+    });
   }
 
   // Clear any previous errors shown inside edit modal
@@ -245,6 +240,8 @@ function openEditModal(data) {
 
   toggleModal('editModal');
 }
+
+let editFlatpickr = null;
 
 // ── VND amount validation ─────────────────────────────────────
 
@@ -314,6 +311,10 @@ document.addEventListener('submit', function (e) {
         resetCustomSelect(
           '#addModal .custom-select[data-name="category"]',
           ''
+        );
+        resetCustomSelect(
+          '#addModal .custom-select[data-name="duration_unit"]',
+          'monthly'
         );
         showToast(data.message || 'Thêm dịch vụ thành công.', 'success');
         refreshDashboard();
@@ -573,11 +574,91 @@ function getCurrentCurrency(modalId) {
   return hidden ? hidden.value : 'VND';
 }
 
+// ── Currency Conversion for Summary Card ────────────────────
+
+// Exchange rate: 1 USD = 25,000 VND (must match backend USD_TO_VND_RATE in utils.py)
+const EXCHANGE_RATE = 25000;
+let summaryAmountVND = 0;
+let currentDisplayCurrency = 'VND';
+
+// Extract the raw amount from the summary card
+function initSummaryAmount() {
+  const summaryEl = document.getElementById('summaryAmount');
+  if (summaryEl && summaryEl.textContent) {
+    // Remove all formatting characters (dots and commas) and parse
+    let rawText = summaryEl.textContent.trim();
+    // Remove thousands separators (dots in Vietnamese format)
+    rawText = rawText.replace(/\./g, '');
+    // Remove any commas
+    rawText = rawText.replace(/,/g, '');
+    
+    summaryAmountVND = parseInt(rawText, 10) || 0;
+    
+    console.log('Summary Amount Debug:', {
+      originalText: summaryEl.textContent,
+      cleanedText: rawText,
+      parsedVND: summaryAmountVND,
+      exchangeRate: EXCHANGE_RATE
+    });
+    
+    // Load saved currency preference
+    const saved = localStorage.getItem('summaryCardCurrency');
+    if (saved === 'USD') {
+      currentDisplayCurrency = 'USD';
+      updateSummaryDisplay();
+    }
+  }
+}
+
+function switchCurrency(currency) {
+  if (currency !== 'VND' && currency !== 'USD') return;
+  currentDisplayCurrency = currency;
+  localStorage.setItem('summaryCardCurrency', currency);
+  updateSummaryDisplay();
+  
+  // Close the dropdown
+  const menu = document.getElementById('currencyMenu');
+  if (menu) {
+    menu.classList.add('invisible', 'opacity-0');
+  }
+}
+
+function formatVND(amount) {
+  // Format number with dots as thousands separator (Vietnamese style)
+  return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function updateSummaryDisplay() {
+  const summaryEl = document.getElementById('summaryAmount');
+  const displayEl = document.getElementById('currencyDisplay');
+  
+  if (!summaryEl || !displayEl) return;
+  
+  let displayText = '';
+  
+  if (currentDisplayCurrency === 'USD') {
+    const usdAmount = summaryAmountVND / EXCHANGE_RATE;
+    displayText = usdAmount.toFixed(2);
+    console.log('Converting to USD:', {
+      vndAmount: summaryAmountVND,
+      exchangeRate: EXCHANGE_RATE,
+      usdAmount: usdAmount,
+      displayText: displayText
+    });
+  } else {
+    displayText = formatVND(summaryAmountVND);
+  }
+  
+  summaryEl.textContent = displayText;
+  displayEl.textContent = currentDisplayCurrency;
+}
+
 // ── Init on page load ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
   initAddFlatpickr();
   clearVndErrorOnInput('addModal');
   clearVndErrorOnInput('editModal');
+  initSummaryAmount();
 
   document.querySelectorAll('#addModal .custom-select[data-name="currency"] .custom-select-item').forEach(function (item) {
     item.addEventListener('click', function () {

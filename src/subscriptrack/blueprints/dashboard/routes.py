@@ -3,7 +3,7 @@ from flask import render_template
 from flask_login import login_required, current_user
 from subscriptrack.models import Subscription
 from subscriptrack.blueprints.dashboard import dashboard_bp
-from subscriptrack.utils import get_next_billing_date, USD_TO_VND_RATE, get_service_icon
+from subscriptrack.utils import get_next_billing_date, USD_TO_VND_RATE, get_service_icon, add_months
 
 
 def render_dashboard(errors=None):
@@ -17,8 +17,19 @@ def render_dashboard(errors=None):
     total_vnd_this_month = 0
 
     for sub in subs:
+        # Compute end_date from duration if set
+        end_date = None
+        if sub.duration and sub.duration_unit:
+            if sub.duration_unit == 'monthly':
+                end_date = add_months(sub.start_date, sub.duration)
+            elif sub.duration_unit == 'yearly':
+                end_date = add_months(sub.start_date, sub.duration * 12)
+            elif sub.duration_unit == 'weekly':
+                from datetime import timedelta
+                end_date = sub.start_date + timedelta(weeks=sub.duration)
+
         # Skip subscriptions that have ended
-        if sub.end_date and sub.end_date < today:
+        if end_date and end_date < today:
             continue
 
         next_date = get_next_billing_date(sub.start_date, sub.cycle)
@@ -38,8 +49,9 @@ def render_dashboard(errors=None):
             'cycle': sub.cycle,
             'category': sub.category,
             'start_date': sub.start_date,
-            'end_date': sub.end_date,
-            'card_name': sub.card_name,
+            'end_date': end_date,
+            'duration': sub.duration,
+            'duration_unit': sub.duration_unit,
             'next_date': next_date,
             'days_remaining': days_remaining,
             'service_icon': get_service_icon(sub.name),

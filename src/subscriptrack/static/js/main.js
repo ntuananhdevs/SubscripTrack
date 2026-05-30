@@ -97,16 +97,6 @@ document.addEventListener('DOMContentLoaded', function () {
       disableMobile: true,
     });
   }
-  const endDateInput = document.getElementById('end_date');
-  if (endDateInput && typeof flatpickr !== 'undefined') {
-    flatpickr(endDateInput, {
-      dateFormat: 'Y-m-d',
-      altInput: true,
-      altFormat: 'd/m/Y',
-      altInputClass: 'shadcn-input cursor-pointer',
-      disableMobile: true,
-    });
-  }
 });
 
 // ── Custom Select Component ───────────────────────────────────
